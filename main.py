@@ -1,71 +1,49 @@
-from itertools import islice, chain
-
-SEQ_START = 'ATG'
-SEQ_END = ['TAA', 'TAG', 'TGA']
+from orf_reader import provide_organized_data
 
 
-def read_file(filename):
-    result = { }
-    with open(filename, 'r') as f:
-        key = None
-        for line in f:
-            line = line.rstrip()
-            if line.startswith(">"):
-                key = line
-                result[key] = ''
-            else:
-                result[key] = result[key] + line
-    return result
-            
-            
-def find_all_orfs_in_reading(sequence, offset = 0, reverse = False):
-    result_list = []
-    if reverse:
-        sequence = ''.join(reversed(sequence))
-    current_segments = []
-    for current_idx in range(offset, len(sequence), 3):
-        portion = ''.join(sequence[current_idx:current_idx + 3])
-        if(portion == SEQ_START):
-            current_segments.append([current_idx + 1, ''])
-        if current_segments:
-            for current_segment in current_segments:
-                current_segment[1] += portion
-        if current_segments and portion in SEQ_END:
-            result_list.extend((x[0], x[1]) for x in current_segments)
-            current_segments.clear()
-    return result_list
+def task1_longest_orf_reading2(organized_data):
+    reading2_idx = 1
+    all_reading2_orfs = (orf_data[1] for readings in organized_data.values() 
+                         for direction in readings[reading2_idx] 
+                         for orf_data in direction)
+    longest_orf = max(all_reading2_orfs, key=lambda x: len(x))
+    return len(longest_orf)
+
+
+def task2_position_of_longest_orf_reading3(organized_data):
+    reading3_idx = 2
+    all_reading3_data = (orf_data for readings in organized_data.values() 
+                         for direction in readings[reading3_idx] 
+                         for orf_data in direction)
+    longest_orf = max(all_reading3_data, key=lambda x: len(x[1]))
+    longest_orf_position, _ = longest_orf
+    return longest_orf_position
+
+
+def task3_longest_forward_orf(organized_data):
+    all_forward_orfs = (forward_orf for readings in organized_data.values() 
+                        for reading in readings for forward_orf in reading[0])
+    longest_orf = max(all_forward_orfs, key=lambda x: len(x[1]))
+    return len(longest_orf[1])
+    
+
+def task4_longest_by_identifier(organized_data):
+    identifier = "gi|142022655|gb|EQ086233.1|16"
+    identifier_data = organized_data[identifier]
+    all_orfs = (orf_data for reading in identifier_data 
+                for direction in reading 
+                for orf_data in direction)
+    longest_orf = max(all_orfs, key=lambda x: len(x[1]))
+    return len(longest_orf[1])
+
+
+def main():
+    organized_data = provide_organized_data()
+    print(task1_longest_orf_reading2(organized_data))
+    print(task2_position_of_longest_orf_reading3(organized_data))
+    print(task3_longest_forward_orf(organized_data))
+    print(task4_longest_by_identifier(organized_data))
 
 
 if __name__ == '__main__':
-    print(any_sequence_any_forward_longest_length())
-
-
-def test_find_all_orfs_in_reading_reading2():
-    result = find_all_orfs_in_reading('AATGAAGAACTAGGTAATGGAGTGAAATA', 1)
-    assert len(result) == 2
-    assert result[0][0] == 2
-    assert result[0][1] == "ATGAAGAACTAG"
-    assert result[1][0] == 17
-    assert result[1][1] == "ATGGAGTGA"
-
-def test_find_all_orfs_in_reading_reading2_reversed():
-    result = find_all_orfs_in_reading('AATGAATAACTAGGTAATGGAGTGAAATA', 1, True)
-    assert len(result) == 1
-    assert result[0][0] == 14
-    assert result[0][1] == "ATGGATCAATAA"
-
-
-def test_find_all_orfs_in_reading_reading2_nested():
-    result = find_all_orfs_in_reading('AATGAAGTCAATGAACTAGGTAATGGAGTGAAATA', 1)
-    assert len(result) == 3
-    assert result[0][0] == 2
-    assert result[0][1] == "ATGAAGTCAATGAACTAG"
-    assert result[1][0] == 11
-    assert result[1][1] == "ATGAACTAG"
-    assert result[2][0] == 23
-    assert result[2][1] == "ATGGAGTGA"
-
-
-def test_find_all_orfs_in_reading_reading1_notfound():
-    result = find_all_orfs_in_reading('AATGAAGAACTAGGTAATGGAGTGAAATA', 0)
-    assert len(result) == 0
+    main()
