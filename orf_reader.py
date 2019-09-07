@@ -20,9 +20,9 @@ def read_file(filename):
 def organize_data(data):
     for name, sequence in data.items():
         data[name] = []
-        for reading in [1,2,3]:
-            forward = find_all_orfs_in_reading(sequence, reading - 1)
-            backward = find_all_orfs_in_reading(sequence, reading - 1, True)
+        for reading in range(3):
+            forward = find_all_orfs_in_reading(sequence, reading)
+            backward = find_all_orfs_in_reading(sequence, reading, True)
             data[name].append((forward, backward))
     return data
 
